@@ -382,7 +382,12 @@ SickSafetyscannersRos::createLaserScanMessage(const sick::datastructure::Data& d
 {
   sensor_msgs::LaserScan scan;
   scan.header.frame_id = m_frame_id;
-  scan.header.stamp    = ros::Time::now();
+
+  std::shared_ptr<sick::datastructure::DataHeader> data_header = data.getDataHeaderPtr();
+  double data_ts = (data_header->getTimestampDate() /*days since 01/01/1972*/ + 730u /*epoch time starts at 01/01/1970*/) * 86400. +
+                   data_header->getTimestampTime() /*milli-seconds since midnight*/ * 1e-3;
+  scan.header.stamp = ros::Time(data_ts);
+
   // Add time offset (to account for network latency etc.)
   scan.header.stamp += ros::Duration().fromSec(m_time_offset);
   // TODO check why returned number of beams is misaligned to size of vector
